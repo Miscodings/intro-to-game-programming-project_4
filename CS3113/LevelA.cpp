@@ -4,6 +4,7 @@ LevelA::LevelA()                                      : Scene { {0.0f}, nullptr 
 LevelA::LevelA(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
 LevelA::~LevelA() {
+   delete mGameState.enemy;
    delete mGameState.xochitl;
    delete mGameState.map;
    shutdown(); 
@@ -47,6 +48,18 @@ void LevelA::initialise()
       {LEFT,  { 0, 1, 2, 3, 4, 5 }},
       {RIGHT, { 6, 7, 8, 9, 10, 11 }},
    };
+   
+   std::map<Direction, std::vector<int>> goalAnimationAtlas = {
+      {RIGHT,  { 0, 1, 2, 3, 4,
+                5, 6, 7, 8, 9,
+                10, 11, 12, 13, 14,
+                15, 16, 17, 18, 19,
+                20, 21, 22, 23, 24,
+                25, 26, 27, 28, 29,
+                30, 31, 32, 33, 34,
+                35, 36, 37, 38, 39 }},
+
+   };
 
    // Assets from @see https://sscary.itch.io/the-adventurer-female
    mGameState.xochitl = new Entity(
@@ -67,6 +80,16 @@ void LevelA::initialise()
       { 2, 6 },                                 // atlas dimensions
       boarAnimationAtlas,                       // actual atlas
       NPC                                       // entity type
+   );
+
+   mGameState.goal = new Entity(
+      {mOrigin.x - 450.0f, mOrigin.y - 300.0f}, // position
+      {250.0f, 250.0f},             // scale
+      "assets/game/campfire.png",              // texture file address
+      ATLAS,                                    // single image or atlas?
+      { 8, 5 },                                 // atlas dimensions
+      goalAnimationAtlas,                       // actual atlas
+      PLAYER                                       // entity type
    );
 
    mGameState.xochitl->setJumpingPower(550.0f);
@@ -111,6 +134,14 @@ void LevelA::update(float deltaTime)
       0
    );
 
+   mGameState.goal->update(
+      deltaTime,
+      nullptr,  // player (for ai awareness)
+      mGameState.map,
+      nullptr,
+      0
+   );
+
    Vector2 currentPlayerPosition = { mGameState.xochitl->getPosition().x, mOrigin.y };
 
    if (mGameState.xochitl->checkCollision(mGameState.enemy)) {
@@ -129,6 +160,7 @@ void LevelA::render()
    mGameState.xochitl->render();
    mGameState.enemy->render();
    mGameState.map->render();
+   mGameState.goal->render();
 
    EndMode2D();
 }

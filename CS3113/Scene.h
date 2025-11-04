@@ -8,6 +8,7 @@ struct GameState
     Entity *xochitl;
     Map *map;
     Entity *enemy;
+    Entity *goal;
 
     Music bgm;
     Sound jumpSound;

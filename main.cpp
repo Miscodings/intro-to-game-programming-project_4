@@ -69,10 +69,10 @@ void processInput()
     {
         gCurrentScene->getState().xochitl->resetMovement();
 
-        if      (IsKeyDown(KEY_A)) gCurrentScene->getState().xochitl->moveLeft();
-        else if (IsKeyDown(KEY_D)) gCurrentScene->getState().xochitl->moveRight();
+        if      (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) gCurrentScene->getState().xochitl->moveLeft();
+        else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) gCurrentScene->getState().xochitl->moveRight();
 
-        if (IsKeyPressed(KEY_W) && gCurrentScene->getState().xochitl->isCollidingBottom())
+        if ((IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_SPACE)) && gCurrentScene->getState().xochitl->isCollidingBottom())
         {
             gCurrentScene->getState().xochitl->jump();
             PlaySound(gCurrentScene->getState().jumpSound);
