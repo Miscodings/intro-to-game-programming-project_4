@@ -3,7 +3,11 @@
 LevelA::LevelA()                                      : Scene { {0.0f}, nullptr   } {}
 LevelA::LevelA(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
-LevelA::~LevelA() { shutdown(); }
+LevelA::~LevelA() {
+   delete mGameState.xochitl;
+   delete mGameState.map;
+   shutdown(); 
+}
 
 void LevelA::initialise()
 {
@@ -21,9 +25,9 @@ void LevelA::initialise()
    mGameState.map = new Map(
       LEVEL_WIDTH, LEVEL_HEIGHT,   // map grid cols & rows
       (unsigned int *) mLevelData, // grid data
-      "assets/game/tileset.png",   // texture filepath
+      "assets/game/grass.png",     // texture filepath
       TILE_DIMENSION,              // tile size
-      4, 1,                        // texture cols & rows
+      9, 18,                       // texture cols & rows
       mOrigin                      // in-game origin
    );
 
@@ -38,10 +42,15 @@ void LevelA::initialise()
    };
 
    float sizeRatio  = 48.0f / 64.0f;
+   
+   std::map<Direction, std::vector<int>> boarAnimationAtlas = {
+      {LEFT,  { 0, 1, 2, 3, 4, 5 }},
+      {RIGHT, { 6, 7, 8, 9, 10, 11 }},
+   };
 
    // Assets from @see https://sscary.itch.io/the-adventurer-female
    mGameState.xochitl = new Entity(
-      {mOrigin.x - 300.0f, mOrigin.y - 200.0f}, // position
+      {mOrigin.x - 1050.0f, mOrigin.y - 300.0f}, // position
       {250.0f * sizeRatio, 250.0f},             // scale
       "assets/game/walk.png",                   // texture file address
       ATLAS,                                    // single image or atlas?
@@ -50,12 +59,27 @@ void LevelA::initialise()
       PLAYER                                    // entity type
    );
 
+   mGameState.enemy = new Entity(
+      {mOrigin.x - 450.0f, mOrigin.y - 300.0f}, // position
+      {250.0f * 0.5f, 250.0f * 0.35f},             // scale
+      "assets/game/boar_walk.png",              // texture file address
+      ATLAS,                                    // single image or atlas?
+      { 2, 6 },                                 // atlas dimensions
+      boarAnimationAtlas,                       // actual atlas
+      NPC                                       // entity type
+   );
+
    mGameState.xochitl->setJumpingPower(550.0f);
    mGameState.xochitl->setColliderDimensions({
-      mGameState.xochitl->getScale().x / 3.5f,
-      mGameState.xochitl->getScale().y / 3.0f
+      mGameState.xochitl->getScale().x / 4.5f,
+      mGameState.xochitl->getScale().y / 4.0f
    });
    mGameState.xochitl->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
+
+   mGameState.enemy->setAIType(WANDERER);
+   mGameState.enemy->setAIState(WALKING);
+   mGameState.enemy->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
+   mGameState.enemy->setPosition({ mGameState.enemy->getPosition().x, mGameState.enemy->getPosition().y - 20.0f });
 
    /*
       ----------- CAMERA -----------
@@ -79,38 +103,38 @@ void LevelA::update(float deltaTime)
       0               // col. entity count
    );
 
+   mGameState.enemy->update(
+      deltaTime,
+      mGameState.xochitl,  // player (for ai awareness)
+      mGameState.map,
+      nullptr,
+      0
+   );
+
    Vector2 currentPlayerPosition = { mGameState.xochitl->getPosition().x, mOrigin.y };
 
-   if (mGameState.xochitl->getPosition().y > 800.0f) mGameState.nextSceneID = 1;
+   if (mGameState.xochitl->checkCollision(mGameState.enemy)) {
+      mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 300.0f});
+   }
 
+   if (mGameState.xochitl->getPosition().y > 800.0f) mGameState.nextSceneID = 2;
    panCamera(&mGameState.camera, &currentPlayerPosition);
 }
 
-// In LevelA.cpp (and LevelB.cpp)
 void LevelA::render()
 {
-    // This is a screen-space operation, it can be inside or outside the camera block
-    ClearBackground(ColorFromHex(mBGColourHexCode));
+   ClearBackground(ColorFromHex(mBGColourHexCode));
+   BeginMode2D(mGameState.camera);
 
-    // --- Start the camera view ---
-    BeginMode2D(mGameState.camera);
+   mGameState.xochitl->render();
+   mGameState.enemy->render();
+   mGameState.map->render();
 
-        // --- Draw all game world objects here ---
-        mGameState.xochitl->render();
-        mGameState.map->render();
-
-    // --- End the camera view ---
-    EndMode2D();
-    
-    // If you wanted to draw UI on top (like a score), you would do it here,
-    // outside the Mode2D block.
+   EndMode2D();
 }
 
 void LevelA::shutdown()
 {
-   delete mGameState.xochitl;
-   delete mGameState.map;
-
    UnloadMusicStream(mGameState.bgm);
    UnloadSound(mGameState.jumpSound);
 }

@@ -1,10 +1,10 @@
 #ifndef LEVELB_H
 #define LEVELB_H
 
-#include "Scene.h" // <-- It was including LevelA.h, fixed to include the base class
+#include "Scene.h"
 
 class LevelB : public Scene {
-public: // <-- MOVED CONSTANTS INSIDE THE CLASS
+public:
     static constexpr int LEVEL_WIDTH = 14,
                          LEVEL_HEIGHT = 8;
 private:

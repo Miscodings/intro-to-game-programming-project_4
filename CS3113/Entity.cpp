@@ -202,7 +202,18 @@ void Entity::animate(float deltaTime)
     }
 }
 
-void Entity::AIWander() { moveLeft(); }
+void Entity::AIWander() {
+    static float wanderTimer = 0.0f;
+    wanderTimer += GetFrameTime();
+
+    if (wanderTimer > 0.5f) {
+        mDirection = (mDirection == LEFT) ? RIGHT : LEFT;
+        wanderTimer = 0.0f;
+    }
+
+    if (mDirection == LEFT) moveLeft();
+    else moveRight();
+}
 
 void Entity::AIFollow(Entity *target)
 {

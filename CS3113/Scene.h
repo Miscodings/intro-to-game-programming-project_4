@@ -7,6 +7,7 @@ struct GameState
 {
     Entity *xochitl;
     Map *map;
+    Entity *enemy;
 
     Music bgm;
     Sound jumpSound;

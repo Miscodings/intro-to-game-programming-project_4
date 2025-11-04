@@ -7,7 +7,6 @@ Level0::~Level0() { shutdown(); }
 
 void Level0::initialise()
 {
-   // Set to -1 to prevent an immediate scene change
    mGameState.nextSceneID = -1; 
 
    mGameState.bgm = LoadMusicStream("assets/game/04 - Silent Forest.wav");
@@ -16,9 +15,9 @@ void Level0::initialise()
    mGameState.map = new Map(
       LEVEL_WIDTH, LEVEL_HEIGHT,
       (unsigned int *) mLevelData,
-      "assets/game/tileset.png",
+      "assets/game/grass.png",
       TILE_DIMENSION,
-      4, 1,
+      9, 18,
       mOrigin
    );
 }
@@ -27,7 +26,6 @@ void Level0::update(float deltaTime)
 {
    UpdateMusicStream(mGameState.bgm);
 
-   // When the user presses enter, switch to Level A (scene index 1)
    if (IsKeyPressed(KEY_ENTER)) {
        mGameState.nextSceneID = 1;
    }
@@ -35,13 +33,10 @@ void Level0::update(float deltaTime)
 
 void Level0::render()
 {
-   // 1. Clear the background (this is a screen-space operation)
    ClearBackground(ColorFromHex(mBGColourHexCode));
    
-   // 2. Render the map (this is a world-space object, but without a camera it's drawn from the top-left)
    mGameState.map->render();
 
-   // 3. Draw the text (this is a screen-space operation)
    const char* titleText = "Rise of Xochitl";
    int titleFontSize = 60;
    int titleTextWidth = MeasureText(titleText, titleFontSize);
@@ -55,12 +50,9 @@ void Level0::render()
 
 void Level0::shutdown()
 {
-   // --- FIXED: Added delete to prevent memory leak ---
    delete mGameState.map;
    mGameState.map = nullptr; // Good practice
 
    UnloadMusicStream(mGameState.bgm);
-   
-   // --- FIXED: Removed this line because jumpSound was never loaded in this scene ---
    // UnloadSound(mGameState.jumpSound); 
 }

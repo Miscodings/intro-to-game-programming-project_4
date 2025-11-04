@@ -96,6 +96,7 @@ public:
     void displayCollider();
 
     bool isActive() { return mEntityStatus == ACTIVE ? true : false; }
+    bool checkCollision(Entity* other) const { return isColliding(other); }
 
     void moveUp()    { mMovement.y = -1; mDirection = UP;    }
     void moveDown()  { mMovement.y =  1; mDirection = DOWN;  }
