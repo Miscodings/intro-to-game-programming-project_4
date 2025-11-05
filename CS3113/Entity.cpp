@@ -180,9 +180,8 @@ bool Entity::isColliding(Entity *other) const
         ((mColliderDimensions.x + other->getColliderDimensions().x) / 2.0f);
     float yDistance = fabs(mPosition.y - other->getPosition().y) - 
         ((mColliderDimensions.y + other->getColliderDimensions().y) / 2.0f);
-
-    if (xDistance < 0.0f && yDistance < 0.0f) return true;
-
+    const float COLLISION_EPSILON = 0.5f;
+    if (xDistance < -COLLISION_EPSILON && yDistance < -COLLISION_EPSILON) return true;
     return false;
 }
 

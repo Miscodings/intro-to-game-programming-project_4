@@ -36,10 +36,8 @@ void LevelA::initialise()
       ----------- PROTAGONIST -----------
    */
    std::map<Direction, std::vector<int>> xochitlAnimationAtlas = {
-      {DOWN,  {  0,  1,  2,  3,  4,  5,  6,  7 }},
-      {LEFT,  {  8,  9, 10, 11, 12, 13, 14, 15 }},
-      {UP,    { 24, 25, 26, 27, 28, 29, 30, 31 }},
-      {RIGHT, { 40, 41, 42, 43, 44, 45, 46, 47 }},
+      {RIGHT,  {  0,  1, 2, 3, 4, 5, 6, 7 }},
+      {LEFT, { 8, 9, 10, 11, 12, 13, 14, 15 }},
    };
 
    float sizeRatio  = 48.0f / 64.0f;
@@ -58,16 +56,15 @@ void LevelA::initialise()
                 25, 26, 27, 28, 29,
                 30, 31, 32, 33, 34,
                 35, 36, 37, 38, 39 }},
-
    };
 
    // Assets from @see https://sscary.itch.io/the-adventurer-female
    mGameState.xochitl = new Entity(
-      {mOrigin.x - 1050.0f, mOrigin.y - 300.0f}, // position
-      {250.0f * sizeRatio, 250.0f},             // scale
+      {mOrigin.x - 1050.0f, mOrigin.y - 10.0f}, // position
+      {250.0f * 0.8f, 250.0f * 0.6f},             // scale
       "assets/game/walk.png",                   // texture file address
       ATLAS,                                    // single image or atlas?
-      { 6, 8 },                                 // atlas dimensions
+      { 2, 8 },                                 // atlas dimensions
       xochitlAnimationAtlas,                    // actual atlas
       PLAYER                                    // entity type
    );
@@ -83,13 +80,13 @@ void LevelA::initialise()
    );
 
    mGameState.goal = new Entity(
-      {mOrigin.x - 450.0f, mOrigin.y - 300.0f}, // position
-      {250.0f, 250.0f},             // scale
-      "assets/game/campfire.png",              // texture file address
-      ATLAS,                                    // single image or atlas?
-      { 8, 5 },                                 // atlas dimensions
-      goalAnimationAtlas,                       // actual atlas
-      PLAYER                                       // entity type
+      {mOrigin.x + 1000.0f, mOrigin.y + 80.0f}, // fixed position
+      {250.0f * 0.4f, 250.0f * 0.6f},                        // scale
+      "assets/game/campfire.png",               // texture file
+      ATLAS,                                    // atlas type
+      {8, 5},                                   // atlas dimensions
+      goalAnimationAtlas,                        // animation frames
+      NONE                                       // entity type (not NPC/PLAYER)
    );
 
    mGameState.xochitl->setJumpingPower(550.0f);
@@ -102,8 +99,15 @@ void LevelA::initialise()
    mGameState.enemy->setAIType(WANDERER);
    mGameState.enemy->setAIState(WALKING);
    mGameState.enemy->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
-   mGameState.enemy->setPosition({ mGameState.enemy->getPosition().x, mGameState.enemy->getPosition().y - 20.0f });
+   mGameState.enemy->setColliderDimensions({
+      mGameState.enemy->getScale().x / 4.5f,
+      mGameState.enemy->getScale().y / 1.3f
+   });
 
+   mGameState.goal->resetMovement();
+   mGameState.goal->setAIState(IDLE);
+   mGameState.goal->setAcceleration({ 0.0f, ACCELERATION_OF_GRAVITY });
+   mGameState.goal->setDirection(RIGHT);
    /*
       ----------- CAMERA -----------
    */
@@ -118,37 +122,22 @@ void LevelA::update(float deltaTime)
 {
    UpdateMusicStream(mGameState.bgm);
 
-   mGameState.xochitl->update(
-      deltaTime,      // delta time / fixed timestep
-      nullptr,        // player
-      mGameState.map, // map
-      nullptr,        // collidable entities
-      0               // col. entity count
-   );
-
-   mGameState.enemy->update(
-      deltaTime,
-      mGameState.xochitl,  // player (for ai awareness)
-      mGameState.map,
-      nullptr,
-      0
-   );
-
-   mGameState.goal->update(
-      deltaTime,
-      nullptr,  // player (for ai awareness)
-      mGameState.map,
-      nullptr,
-      0
-   );
+   mGameState.xochitl->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
+   mGameState.enemy->update(deltaTime, mGameState.xochitl, mGameState.map, nullptr, 0);
+   mGameState.goal->updateAnimationOnly(deltaTime);
 
    Vector2 currentPlayerPosition = { mGameState.xochitl->getPosition().x, mOrigin.y };
 
    if (mGameState.xochitl->checkCollision(mGameState.enemy)) {
-      mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 300.0f});
+      mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
    }
 
-   if (mGameState.xochitl->getPosition().y > 800.0f) mGameState.nextSceneID = 2;
+   if (mGameState.xochitl->getPosition().y > 800.0f)  {
+      mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
+   }
+
+   if (mGameState.xochitl->checkCollision(mGameState.goal)) mGameState.nextSceneID = 2;
+
    panCamera(&mGameState.camera, &currentPlayerPosition);
 }
 
@@ -157,10 +146,13 @@ void LevelA::render()
    ClearBackground(ColorFromHex(mBGColourHexCode));
    BeginMode2D(mGameState.camera);
 
+   mGameState.map->render();
    mGameState.xochitl->render();
    mGameState.enemy->render();
-   mGameState.map->render();
    mGameState.goal->render();
+
+   mGameState.xochitl->displayCollider();
+   mGameState.enemy->displayCollider();
 
    EndMode2D();
 }

@@ -87,6 +87,9 @@ public:
 
     void update(float deltaTime, Entity *player, Map *map, 
         Entity *collidableEntities, int collisionCheckCount);
+
+        
+    void updateAnimationOnly(float deltaTime) { animate(deltaTime); }
     void render();
     void normaliseMovement() { Normalise(&mMovement); }
 
