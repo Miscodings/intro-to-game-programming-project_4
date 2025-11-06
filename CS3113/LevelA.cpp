@@ -91,8 +91,8 @@ void LevelA::initialise()
 
    mGameState.xochitl->setJumpingPower(550.0f);
    mGameState.xochitl->setColliderDimensions({
-      mGameState.xochitl->getScale().x / 4.5f,
-      mGameState.xochitl->getScale().y / 4.0f
+      mGameState.xochitl->getScale().x / 2.5f,
+      mGameState.xochitl->getScale().y / 1.5f
    });
    mGameState.xochitl->setAcceleration({0.0f, ACCELERATION_OF_GRAVITY});
 
