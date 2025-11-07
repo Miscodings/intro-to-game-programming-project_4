@@ -7,11 +7,13 @@ struct GameState
 {
     Entity *xochitl;
     Map *map;
-    Entity *enemy;
+    std::vector<Entity*> enemies;
     Entity *goal;
 
     Music bgm;
     Sound jumpSound;
+    Sound hurtSound;
+    Sound goalSound;
 
     Camera2D camera;
 

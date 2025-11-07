@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Entity.h"
 
 Entity::Entity() : mPosition {0.0f, 0.0f}, mMovement {0.0f, 0.0f}, 
@@ -153,7 +154,6 @@ void Entity::checkCollisionX(Map *map)
     float xOverlap = 0.0f;
     float yOverlap = 0.0f;
 
-    // COLLISION ON RIGHT (moving right)
     if (map->isSolidTileAt(rightCentreProbe, &xOverlap, &yOverlap) 
          && mVelocity.x > 0.0f && yOverlap >= 0.5f)
     {
@@ -214,20 +214,54 @@ void Entity::AIWander() {
     else moveRight();
 }
 
+void Entity::AIFly()
+{
+    mFlyTimer += GetFrameTime();
+
+    if (mFlyTimer > 1.0f) {
+        mMovingUp = !mMovingUp;
+        mFlyTimer = 0.0f;
+    }
+
+    if (mMovingUp) mVelocity.y = -200.0f;
+    else mVelocity.y = 200.0f;
+    mVelocity.x = 0;
+}
+
 void Entity::AIFollow(Entity *target)
 {
+    // Define how far the player must be past the snail to trigger a turn.
+    // ** You will need to tune this value! **
+    const float TURN_THRESHOLD = 120.0f; // e.g., 20 pixels
+
     switch (mAIState)
     {
     case IDLE:
-        if (Vector2Distance(mPosition, target->getPosition()) < 250.0f) 
-            mAIState = WALKING;
+        if (Vector2Distance(mPosition, target->getPosition()) < 250.0f) mAIState = WALKING;
         break;
 
     case WALKING:
-        // Depending on where the player is in respect to their x-position
-        // Change direction of the enemy
-        if (mPosition.x > target->getPosition().x) moveLeft();
-        else                                       moveRight();
+        {
+            float playerX = target->getPosition().x;
+            float myX = mPosition.x;
+
+            if (mDirection == RIGHT || mDirection == IDLE_RIGHT)
+            {
+                if (playerX < myX - TURN_THRESHOLD) moveLeft();
+                else moveRight();
+            }
+            else if (mDirection == LEFT || mDirection == IDLE_LEFT)
+            {
+                if (playerX > myX + TURN_THRESHOLD) moveRight();
+                else moveLeft();
+            }
+            else
+            {
+                if (myX > playerX) moveLeft();
+                else moveRight();
+            }
+        }
+        break;
     
     default:
         break;
@@ -245,36 +279,37 @@ void Entity::AIActivate(Entity *target)
     case FOLLOWER:
         AIFollow(target);
         break;
-    
+
+    case VERTICAL_FLYER:   // new AI type
+        AIFly();
+        break;
+
     default:
         break;
     }
 }
 
-void Entity::update(float deltaTime, Entity *player, Map *map, 
-    Entity *collidableEntities, int collisionCheckCount)
+void Entity::update(float deltaTime, Entity *player, Map *map,
+                    Entity *collidableEntities, int collisionCheckCount)
 {
     if (mEntityStatus == INACTIVE) return;
-    
+
     if (mEntityType == NPC) AIActivate(player);
 
     resetColliderFlags();
 
+    // horizontal movement
     mVelocity.x = mMovement.x * mSpeed;
-
     mVelocity.x += mAcceleration.x * deltaTime;
     mVelocity.y += mAcceleration.y * deltaTime;
 
-    // ––––– JUMPING ––––– //
-    if (mIsJumping)
-    {
-        // STEP 1: Immediately return the flag to its original false state
+    // jumping
+    if (mIsJumping) {
         mIsJumping = false;
-        
-        // STEP 2: The player now acquires an upward velocity
         mVelocity.y -= mJumpingPower;
     }
 
+    // vertical movement & collisions
     mPosition.y += mVelocity.y * deltaTime;
     checkCollisionY(collidableEntities, collisionCheckCount);
     checkCollisionY(map);
@@ -283,8 +318,33 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     checkCollisionX(collidableEntities, collisionCheckCount);
     checkCollisionX(map);
 
-    if (mTextureType == ATLAS && GetLength(mMovement) != 0 && mIsCollidingBottom) 
-        animate(deltaTime);
+    // direction decision
+    if (!mIsCollidingBottom) {
+        // in the air → jumping
+        mDirection = (mVelocity.x >= 0) ? JUMP_RIGHT : JUMP_LEFT;
+    } else {
+        if (fabs(mVelocity.x) > 0.1f) {
+            // moving → walk
+            mDirection = (mVelocity.x > 0) ? RIGHT : LEFT;
+        } else {
+            // not moving → idle
+            if (mDirection == LEFT || mDirection == JUMP_LEFT)
+                mDirection = IDLE_LEFT;
+            else
+                mDirection = IDLE_RIGHT;
+        }
+    }
+
+    if (mTextureType == ATLAS) {
+        auto it = mAnimationAtlas.find(mDirection);
+        if (it != mAnimationAtlas.end()) {
+            mAnimationIndices = it->second;
+            animate(deltaTime);
+        } else {
+            mAnimationIndices = mAnimationAtlas[IDLE_RIGHT];
+            mCurrentFrameIndex = mAnimationIndices[0];
+        }
+    }
 }
 
 void Entity::render()

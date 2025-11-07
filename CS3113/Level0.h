@@ -21,6 +21,7 @@ private:
 
 public:
     static constexpr float TILE_DIMENSION = 75.0f;
+    Texture2D mBackgroundTexture;
 
     Level0();
     Level0(Vector2 origin, const char *bgHexCode);

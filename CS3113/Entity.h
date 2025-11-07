@@ -3,10 +3,10 @@
 
 #include "Map.h"
 
-enum Direction    { LEFT, UP, RIGHT, DOWN              }; // For walking
+enum Direction    { IDLE_LEFT, IDLE_RIGHT, LEFT, RIGHT, JUMP_LEFT, JUMP_RIGHT };
 enum EntityStatus { ACTIVE, INACTIVE                   };
 enum EntityType   { PLAYER, BLOCK, PLATFORM, NPC, NONE };
-enum AIType       { WANDERER, FOLLOWER                 };
+enum AIType       { WANDERER, FOLLOWER, VERTICAL_FLYER };
 enum AIState      { WALKING, IDLE, FOLLOWING           };
 
 class Entity
@@ -38,6 +38,10 @@ private:
     int mSpeed;
     float mAngle;
 
+    // for flying enemies
+    bool mMovingUp = true;
+    float mFlyTimer = 0.0f;
+
     bool mIsCollidingTop    = false;
     bool mIsCollidingBottom = false;
     bool mIsCollidingRight  = false;
@@ -67,6 +71,7 @@ private:
 
     void animate(float deltaTime);
     void AIActivate(Entity *target);
+    void AIFly();
     void AIWander();
     void AIFollow(Entity *target);
 
@@ -101,8 +106,6 @@ public:
     bool isActive() { return mEntityStatus == ACTIVE ? true : false; }
     bool checkCollision(Entity* other) const { return isColliding(other); }
 
-    void moveUp()    { mMovement.y = -1; mDirection = UP;    }
-    void moveDown()  { mMovement.y =  1; mDirection = DOWN;  }
     void moveLeft()  { mMovement.x = -1; mDirection = LEFT;  }
     void moveRight() { mMovement.x =  1; mDirection = RIGHT; }
 

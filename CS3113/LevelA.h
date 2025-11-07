@@ -7,6 +7,7 @@ class LevelA : public Scene {
 public:
     static constexpr int LEVEL_WIDTH = 32,
                          LEVEL_HEIGHT = 8;
+    
 private:
     unsigned int mLevelData[LEVEL_WIDTH * LEVEL_HEIGHT] = {
         34,  0,  0,  0, 0,  0,  0, 0,  0,  0,  0,  0,  0, 0,  0,  0, 0,  0,  0, 0,  0,  0, 0,  0,  0, 0,  0,  0,  0,  0,  0, 34,

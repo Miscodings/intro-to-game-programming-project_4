@@ -11,6 +11,7 @@ void Level0::initialise()
 
    mGameState.bgm = LoadMusicStream("assets/game/04 - Silent Forest.wav");
    SetMusicVolume(mGameState.bgm, 0.33f);
+   mBackgroundTexture = LoadTexture("assets/game/sky.png");
 
    mGameState.map = new Map(
       LEVEL_WIDTH, LEVEL_HEIGHT,
@@ -34,10 +35,21 @@ void Level0::update(float deltaTime)
 void Level0::render()
 {
    ClearBackground(ColorFromHex(mBGColourHexCode));
+   float scaleX = (float)GetScreenWidth() / mBackgroundTexture.width;
+   float scaleY = (float)GetScreenHeight() / mBackgroundTexture.height;
+
+   DrawTexturePro(
+      mBackgroundTexture,
+      { 0, 0, (float)mBackgroundTexture.width, (float)mBackgroundTexture.height },
+      { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() },
+      { 0, 0 },
+      0.0f,
+      WHITE
+   );
    
    mGameState.map->render();
 
-   const char* titleText = "Rise of Xochitl";
+   const char* titleText = "The Forest Path";
    int titleFontSize = 60;
    int titleTextWidth = MeasureText(titleText, titleFontSize);
    DrawText(titleText, (GetScreenWidth() - titleTextWidth) / 2, GetScreenHeight() / 4, titleFontSize, WHITE);
@@ -52,6 +64,7 @@ void Level0::shutdown()
 {
    delete mGameState.map;
    mGameState.map = nullptr; // Good practice
+   UnloadTexture(mBackgroundTexture);
 
    UnloadMusicStream(mGameState.bgm);
    // UnloadSound(mGameState.jumpSound); 

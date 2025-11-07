@@ -1,6 +1,7 @@
 #include "CS3113/LevelA.h"
 #include "CS3113/LevelB.h"
-#include "CS3113/Level0.h" // <-- ADDED INCLUDE FOR LEVEL 0
+#include "CS3113/LevelC.h"
+#include "CS3113/Level0.h"
 
 // Global Constants
 constexpr int SCREEN_WIDTH     = 1000,
@@ -17,10 +18,10 @@ float gPreviousTicks   = 0.0f,
 Scene *gCurrentScene = nullptr;
 std::vector<Scene*> gLevels;
 
-// --- FIXED POINTER DECLARATIONS ---
-Level0 *gLevel0 = nullptr; // <-- Correct type is Level0*
+Level0 *gLevel0 = nullptr;
 LevelA *gLevelA = nullptr;
 LevelB *gLevelB = nullptr;
+LevelC *gLevelC = nullptr;
 
 // Function Declarations
 void switchToScene(Scene *scene);
@@ -47,12 +48,14 @@ void initialise()
 
     // --- Create scene objects ---
     gLevel0 = new Level0(ORIGIN, "#76b6ff"); // Blue color for menu
-    gLevelA = new LevelA(ORIGIN, "#C0897E");
+    gLevelA = new LevelA(ORIGIN, "#87a7ebff");
     gLevelB = new LevelB(ORIGIN, "#011627");
+    gLevelC = new LevelC(ORIGIN, "#774709");
 
     gLevels.push_back(gLevel0);
     gLevels.push_back(gLevelA);
     gLevels.push_back(gLevelB);
+    gLevels.push_back(gLevelC);
 
     switchToScene(gLevels[0]);
 
@@ -63,8 +66,6 @@ void processInput()
 {
     if (!gCurrentScene) return;
 
-    // This input is for player movement; it will only work correctly
-    // in scenes that have a player initialized (LevelA, LevelB)
     if (gCurrentScene->getState().xochitl) 
     {
         gCurrentScene->getState().xochitl->resetMovement();
