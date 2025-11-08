@@ -1,4 +1,5 @@
 #include "Level0.h"
+int GameState::lives = 0;
 
 Level0::Level0()                                      : Scene { {0.0f}, nullptr   } {}
 Level0::Level0(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
@@ -9,9 +10,9 @@ void Level0::initialise()
 {
    mGameState.nextSceneID = -1; 
 
-   mGameState.bgm = LoadMusicStream("assets/game/04 - Silent Forest.wav");
-   SetMusicVolume(mGameState.bgm, 0.33f);
+   mGameState.bgm = LoadMusicStream("assets/game/music_level1.wav");
    mBackgroundTexture = LoadTexture("assets/game/sky.png");
+   PlayMusicStream(mGameState.bgm);
 
    mGameState.map = new Map(
       LEVEL_WIDTH, LEVEL_HEIGHT,
@@ -21,6 +22,8 @@ void Level0::initialise()
       9, 18,
       mOrigin
    );
+
+   GameState::lives = 3;
 }
 
 void Level0::update(float deltaTime)
@@ -67,5 +70,4 @@ void Level0::shutdown()
    UnloadTexture(mBackgroundTexture);
 
    UnloadMusicStream(mGameState.bgm);
-   // UnloadSound(mGameState.jumpSound); 
 }

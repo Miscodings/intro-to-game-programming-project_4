@@ -2,6 +2,8 @@
 #include "CS3113/LevelB.h"
 #include "CS3113/LevelC.h"
 #include "CS3113/Level0.h"
+#include "CS3113/WinScreen.h"
+#include "CS3113/LoseScreen.h"
 
 // Global Constants
 constexpr int SCREEN_WIDTH     = 1000,
@@ -22,6 +24,8 @@ Level0 *gLevel0 = nullptr;
 LevelA *gLevelA = nullptr;
 LevelB *gLevelB = nullptr;
 LevelC *gLevelC = nullptr;
+WinScreen *gWinScreen = nullptr;
+LoseScreen *gLoseScreen = nullptr;
 
 // Function Declarations
 void switchToScene(Scene *scene);
@@ -51,11 +55,15 @@ void initialise()
     gLevelA = new LevelA(ORIGIN, "#87a7ebff");
     gLevelB = new LevelB(ORIGIN, "#011627");
     gLevelC = new LevelC(ORIGIN, "#774709");
+    gWinScreen = new WinScreen(ORIGIN, "#5bff76ff");
+    gLoseScreen = new LoseScreen(ORIGIN, "#ff6b5bff");
 
     gLevels.push_back(gLevel0);
     gLevels.push_back(gLevelA);
     gLevels.push_back(gLevelB);
     gLevels.push_back(gLevelC);
+    gLevels.push_back(gWinScreen);
+    gLevels.push_back(gLoseScreen);
 
     switchToScene(gLevels[0]);
 
@@ -111,7 +119,6 @@ void render()
 
 void shutdown() 
 {
-    // A single loop is the safest way to delete scenes
     for (auto scene : gLevels) {
         delete scene;
     }

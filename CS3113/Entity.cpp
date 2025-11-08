@@ -280,8 +280,24 @@ void Entity::AIActivate(Entity *target)
         AIFollow(target);
         break;
 
-    case VERTICAL_FLYER:   // new AI type
-        AIFly();
+    case VERTICAL_FLYER:
+        switch (mAIState)
+        {
+            case IDLE:
+                if (Vector2Distance(mPosition, target->getPosition()) < 1200.0f)
+                {
+                    mAIState = WALKING; // "WALKING" now means "ACTIVE" for the bee
+                }
+                mVelocity.y = 0.0f;
+                break;
+            case WALKING: // "ACTIVE" state
+                AIFly();
+                if (Vector2Distance(mPosition, target->getPosition()) > 1250.0f)
+                {
+                    mAIState = IDLE;
+                }
+                break;
+        }
         break;
 
     default:
@@ -319,19 +335,22 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     checkCollisionX(map);
 
     // direction decision
-    if (!mIsCollidingBottom) {
-        // in the air → jumping
-        mDirection = (mVelocity.x >= 0) ? JUMP_RIGHT : JUMP_LEFT;
-    } else {
-        if (fabs(mVelocity.x) > 0.1f) {
-            // moving → walk
-            mDirection = (mVelocity.x > 0) ? RIGHT : LEFT;
+    if (mEntityType == PLAYER) // <--- ADD THIS LINE
+    {
+        if (!mIsCollidingBottom) {
+            // in the air → jumping
+            mDirection = (mVelocity.x >= 0) ? JUMP_RIGHT : JUMP_LEFT;
         } else {
-            // not moving → idle
-            if (mDirection == LEFT || mDirection == JUMP_LEFT)
-                mDirection = IDLE_LEFT;
-            else
-                mDirection = IDLE_RIGHT;
+            if (fabs(mVelocity.x) > 0.1f) {
+                // moving → walk
+                mDirection = (mVelocity.x > 0) ? RIGHT : LEFT;
+            } else {
+                // not moving → idle
+                if (mDirection == LEFT || mDirection == JUMP_LEFT)
+                    mDirection = IDLE_LEFT;
+                else
+                    mDirection = IDLE_RIGHT;
+            }
         }
     }
 

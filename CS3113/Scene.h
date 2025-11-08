@@ -18,6 +18,8 @@ struct GameState
     Camera2D camera;
 
     int nextSceneID;
+
+    static int lives;
 };
 
 class Scene 

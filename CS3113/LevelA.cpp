@@ -5,6 +5,7 @@ LevelA::LevelA(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCod
 
 LevelA::~LevelA() {
    for (auto& enemy : mGameState.enemies) delete enemy;
+   mGameState.enemies.clear();
    delete mGameState.xochitl;
    delete mGameState.goal;
    delete mGameState.map;
@@ -13,6 +14,9 @@ LevelA::~LevelA() {
 
 void LevelA::initialise()
 {
+   for (auto& enemy : mGameState.enemies) delete enemy;
+   mGameState.enemies.clear();
+
    mGameState.nextSceneID = -1; 
    
    mGameState.bgm = LoadMusicStream("assets/game/music_level1.wav");
@@ -39,7 +43,7 @@ void LevelA::initialise()
       ----------- PROTAGONIST -----------
    */
    std::map<Direction, std::vector<int>> xochitlAnimationAtlas = {
-      {IDLE_RIGHT,  {  0,  1, 2, 3 }},
+      {IDLE_RIGHT,  { 0,  1, 2, 3 }},
       {IDLE_LEFT, { 8, 9, 10, 11 }},
       {RIGHT,  {  16, 17, 18, 19, 20, 21, 22, 23 }},
       {LEFT, { 24, 25, 26, 27, 28, 29, 30, 31 }},
@@ -76,9 +80,8 @@ void LevelA::initialise()
       PLAYER                                    // entity type
    );
 
-    // Multiple enemies
    std::vector<Vector2> enemyPositions = {
-      {mOrigin.x - 450.0f, mOrigin.y - 300.0f}
+      {mOrigin.x - 425.0f, mOrigin.y - 10.0f}
    };
 
    for (auto& pos : enemyPositions) {
@@ -98,6 +101,7 @@ void LevelA::initialise()
          boar->getScale().x / 4.5f,
          boar->getScale().y / 1.3f
       });
+
       mGameState.enemies.push_back(boar);
    }
 
@@ -146,7 +150,7 @@ void LevelA::update(float deltaTime)
       else
          mGameState.xochitl->setDirection(LEFT);
    }
-
+   
    mGameState.xochitl->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
 
    for (auto& enemy : mGameState.enemies) {
@@ -154,6 +158,7 @@ void LevelA::update(float deltaTime)
       if (mGameState.xochitl->checkCollision(enemy)) {
          mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
          PlaySound(mGameState.hurtSound);
+         GameState::lives--;
       }
    }
 
@@ -161,14 +166,19 @@ void LevelA::update(float deltaTime)
 
    Vector2 currentPlayerPosition = { mGameState.xochitl->getPosition().x, mOrigin.y };
 
-   if (mGameState.xochitl->getPosition().y > 800.0f)  {
+   if (mGameState.xochitl->getPosition().y > 800.0f) {
       mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
       PlaySound(mGameState.hurtSound);
+      GameState::lives--;
    }
 
    if (mGameState.xochitl->checkCollision(mGameState.goal)) {
       mGameState.nextSceneID = 2;
       PlaySound(mGameState.goalSound);
+   }
+
+   if (GameState::lives <= 0) {
+      mGameState.nextSceneID = 5;
    }
 
    panCamera(&mGameState.camera, &currentPlayerPosition);
@@ -183,16 +193,17 @@ void LevelA::render()
    mGameState.xochitl->render();
    for (auto& enemy : mGameState.enemies) {
       enemy->render();
-      enemy->displayCollider();
    }
    mGameState.goal->render();
-   mGameState.xochitl->displayCollider();
 
    EndMode2D();
+   DrawText(TextFormat("Lives: %d", GameState::lives), 10, 10, 20, WHITE);
 }
 
 void LevelA::shutdown()
 {
    UnloadMusicStream(mGameState.bgm);
    UnloadSound(mGameState.jumpSound);
+   UnloadSound(mGameState.hurtSound);
+   UnloadSound(mGameState.goalSound);
 }

@@ -4,11 +4,12 @@ LevelC::LevelC()                                      : Scene { {0.0f}, nullptr 
 LevelC::LevelC(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
 LevelC::~LevelC() {
-    for (auto& enemy : mGameState.enemies) delete enemy;
-    delete mGameState.xochitl;
-    delete mGameState.goal;
-    delete mGameState.map;
-    shutdown(); 
+   for (auto& enemy : mGameState.enemies) delete enemy;
+   mGameState.enemies.clear();
+   delete mGameState.xochitl;
+   delete mGameState.goal;
+   delete mGameState.map;
+   shutdown();
 }
 
 void LevelC::initialise()
@@ -90,7 +91,7 @@ void LevelC::initialise()
       {mOrigin.x + 700.0f, mOrigin.y - 300.0f},
       {mOrigin.x + 450.0f, mOrigin.y - 300.0f},
       {mOrigin.x + 450.0f, mOrigin.y - 0.0f},
-      {mOrigin.x + 900.0f, mOrigin.y - 300.0f},
+      {mOrigin.x + 900.0f, mOrigin.y - 300.0f}
    };
 
    for (auto& pos : enemyPositions) {
@@ -115,7 +116,7 @@ void LevelC::initialise()
    }
 
    mGameState.goal = new Entity(
-      {mOrigin.x + 1000.0f, mOrigin.y + 100.0f}, // fixed position
+      {mOrigin.x + 1025.0f, mOrigin.y + 30.0f}, // fixed position
       {250.0f * 0.35f, 250.0f * 0.4f},                        // scale
       "assets/game/campfire.png",               // texture file
       ATLAS,                                    // atlas type
@@ -162,19 +163,12 @@ void LevelC::update(float deltaTime)
 
    mGameState.xochitl->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
 
-   for (auto& snail : mGameState.enemies) {
-      snail->update(deltaTime, mGameState.xochitl, mGameState.map, nullptr, 0);
-      if (mGameState.xochitl->checkCollision(snail)) {
+   for (auto& enemy : mGameState.enemies) {
+      enemy->update(deltaTime, mGameState.xochitl, mGameState.map, nullptr, 0);
+      if (mGameState.xochitl->checkCollision(enemy)) {
          mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
          PlaySound(mGameState.hurtSound);
-
-         for (auto& enemy : mGameState.enemies) delete enemy;
-         delete mGameState.xochitl;
-         delete mGameState.goal;
-         delete mGameState.map;
-         mGameState.enemies.clear();
-
-         initialise();
+         GameState::lives--;
       }
    }
 
@@ -182,23 +176,21 @@ void LevelC::update(float deltaTime)
 
    Vector2 currentPlayerPosition = { mGameState.xochitl->getPosition().x, mOrigin.y };
 
-   if (mGameState.xochitl->getPosition().y > 800.0f)  {
+   if (mGameState.xochitl->getPosition().y > 800.0f) {
       mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
       PlaySound(mGameState.hurtSound);
-
-      for (auto& enemy : mGameState.enemies) delete enemy;
-      delete mGameState.xochitl;
-      delete mGameState.goal;
-      delete mGameState.map;
-      mGameState.enemies.clear();
-
-      initialise();
+      GameState::lives--;
    }
 
-   if (mGameState.xochitl->checkCollision(mGameState.goal))  {
-      mGameState.nextSceneID = 3;
+   if (mGameState.xochitl->checkCollision(mGameState.goal)) {
+      mGameState.nextSceneID = 4;
       PlaySound(mGameState.goalSound);
    }
+
+   if (GameState::lives <= 0) {
+      mGameState.nextSceneID = 5;
+   }
+
 
    panCamera(&mGameState.camera, &currentPlayerPosition);
 }
@@ -213,19 +205,19 @@ void LevelC::render()
 
    for (auto& snail : mGameState.enemies) {
       snail->render();
-      snail->displayCollider();
    }
 
    mGameState.goal->render();
 
-   mGameState.xochitl->displayCollider();
-
    EndMode2D();
+   DrawText(TextFormat("Lives: %d", GameState::lives), 10, 10, 20, WHITE);
 }
 
 void LevelC::shutdown()
 {
    UnloadMusicStream(mGameState.bgm);
    UnloadSound(mGameState.jumpSound);
+   UnloadSound(mGameState.hurtSound);
+   UnloadSound(mGameState.goalSound);
    mGameState.enemies.clear();
 }

@@ -4,11 +4,12 @@ LevelB::LevelB()                                      : Scene { {0.0f}, nullptr 
 LevelB::LevelB(Vector2 origin, const char *bgHexCode) : Scene { origin, bgHexCode } {}
 
 LevelB::~LevelB() {
-    for (auto& enemy : mGameState.enemies) delete enemy;
-    delete mGameState.xochitl;
-    delete mGameState.goal;
-    delete mGameState.map;
-    shutdown(); 
+   for (auto& enemy : mGameState.enemies) delete enemy;
+   mGameState.enemies.clear();
+   delete mGameState.xochitl;
+   delete mGameState.goal;
+   delete mGameState.map;
+   shutdown(); 
 }
 
 void LevelB::initialise()
@@ -80,7 +81,7 @@ void LevelB::initialise()
    std::vector<Vector2> beePositions = {
       {mOrigin.x - 525.0f, mOrigin.y + 95.0f},
       {mOrigin.x - 225.0f, mOrigin.y + 95.0f},
-      {mOrigin.x + 525.0f, mOrigin.y + 95.0f},
+      {mOrigin.x + 525.0f, mOrigin.y + 95.0f}
    };
 
    for (auto& pos : beePositions) {
@@ -95,7 +96,7 @@ void LevelB::initialise()
       );
       bee->setDirection(RIGHT);
       bee->setAIType(VERTICAL_FLYER);
-      bee->setAIState(WALKING); // or IDLE, doesn’t matter much
+      bee->setAIState(IDLE);
       bee->setAcceleration({0.0f, 0.0f});
       bee->setColliderDimensions({
          bee->getScale().x / 4.5f,
@@ -152,11 +153,12 @@ void LevelB::update(float deltaTime)
 
    mGameState.xochitl->update(deltaTime, nullptr, mGameState.map, nullptr, 0);
 
-   for (auto& bee : mGameState.enemies) {
-      bee->update(deltaTime, mGameState.xochitl, mGameState.map, nullptr, 0);
-      if (mGameState.xochitl->checkCollision(bee)) {
+   for (auto& enemy : mGameState.enemies) {
+      enemy->update(deltaTime, mGameState.xochitl, mGameState.map, nullptr, 0);
+      if (mGameState.xochitl->checkCollision(enemy)) {
          mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
          PlaySound(mGameState.hurtSound);
+         GameState::lives--;
       }
    }
 
@@ -164,15 +166,21 @@ void LevelB::update(float deltaTime)
 
    Vector2 currentPlayerPosition = { mGameState.xochitl->getPosition().x, mOrigin.y };
 
-   if (mGameState.xochitl->getPosition().y > 800.0f)  {
+   if (mGameState.xochitl->getPosition().y > 800.0f) {
       mGameState.xochitl->setPosition({mOrigin.x - 1050.0f, mOrigin.y - 10.0f});
       PlaySound(mGameState.hurtSound);
+      GameState::lives--;
    }
 
-   if (mGameState.xochitl->checkCollision(mGameState.goal))  {
+   if (mGameState.xochitl->checkCollision(mGameState.goal)) {
       mGameState.nextSceneID = 3;
       PlaySound(mGameState.goalSound);
    }
+
+   if (GameState::lives <= 0) {
+      mGameState.nextSceneID = 5;
+   }
+
 
    panCamera(&mGameState.camera, &currentPlayerPosition);
 }
@@ -187,19 +195,19 @@ void LevelB::render()
 
    for (auto& bee : mGameState.enemies) {
       bee->render();
-      bee->displayCollider();
    }
 
    mGameState.goal->render();
 
-   mGameState.xochitl->displayCollider();
-
    EndMode2D();
+   DrawText(TextFormat("Lives: %d", GameState::lives), 10, 10, 20, WHITE);
 }
 
 void LevelB::shutdown()
 {
    UnloadMusicStream(mGameState.bgm);
    UnloadSound(mGameState.jumpSound);
+   UnloadSound(mGameState.hurtSound);
+   UnloadSound(mGameState.goalSound);
    mGameState.enemies.clear();
 }
