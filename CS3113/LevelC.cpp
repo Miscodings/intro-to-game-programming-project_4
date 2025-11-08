@@ -52,9 +52,9 @@ void LevelC::initialise()
    
    std::map<Direction, std::vector<int>> snailAnimationAtlas = {
       {LEFT,  { 0, 1, 2, 3, 4, 5, 6, 7 }},
-      {RIGHT,  { 0, 1, 2, 3, 4, 5, 6, 7 }},
+      {RIGHT,  { 8, 9, 10, 11, 12, 13, 14, 15 }},
       {IDLE_LEFT,  { 0, 1, 2, 3, 4, 5, 6, 7 }},
-      {IDLE_RIGHT,  { 0, 1, 2, 3, 4, 5, 6, 7 }},
+      {IDLE_RIGHT,  { 8, 9, 10, 11, 12, 13, 14, 15 }},
    };
    
    std::map<Direction, std::vector<int>> goalAnimationAtlas = {
@@ -100,7 +100,7 @@ void LevelC::initialise()
          {250.0f * 0.5f, 250.0f * 0.35f},
          "assets/game/snail_walk.png",
          ATLAS,
-         {1, 8},
+         {2, 8},
          snailAnimationAtlas,
          NPC
       );
