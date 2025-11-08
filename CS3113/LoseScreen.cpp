@@ -63,7 +63,7 @@ void LoseScreen::render()
 void LoseScreen::shutdown()
 {
    delete mGameState.map;
-   mGameState.map = nullptr; // Good practice
+   mGameState.map = nullptr;
    UnloadTexture(mBackgroundTexture);
 
    UnloadMusicStream(mGameState.bgm);

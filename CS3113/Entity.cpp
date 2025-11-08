@@ -36,20 +36,14 @@ void Entity::checkCollisionY(Entity *collidableEntities, int collisionCheckCount
 {
     for (int i = 0; i < collisionCheckCount; i++)
     {
-        // STEP 1: For every entity that our player can collide with...
         Entity *collidableEntity = &collidableEntities[i];
         
         if (isColliding(collidableEntity))
         {
-            // STEP 2: Calculate the distance between its centre and our centre
-            //         and use that to calculate the amount of overlap between
-            //         both bodies.
             float yDistance = fabs(mPosition.y - collidableEntity->mPosition.y);
             float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - 
                               (collidableEntity->mColliderDimensions.y / 2.0f));
-            
-            // STEP 3: "Unclip" ourselves from the other entity, and zero our
-            //         vertical velocity.
+                              
             if (mVelocity.y > 0) 
             {
                 mPosition.y -= yOverlap;
@@ -76,15 +70,9 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
         
         if (isColliding(collidableEntity))
         {            
-            // When standing on a platform, we're always slightly overlapping
-            // it vertically due to gravity, which causes false horizontal
-            // collision detections. So the solution I dound is only resolve X
-            // collisions if there's significant Y overlap, preventing the 
-            // platform we're standing on from acting like a wall.
             float yDistance = fabs(mPosition.y - collidableEntity->mPosition.y);
             float yOverlap  = fabs(yDistance - (mColliderDimensions.y / 2.0f) - (collidableEntity->mColliderDimensions.y / 2.0f));
 
-            // Skip if barely touching vertically (standing on platform)
             if (yOverlap < Y_COLLISION_THRESHOLD) continue;
 
             float xDistance = fabs(mPosition.x - collidableEntity->mPosition.x);
@@ -94,13 +82,11 @@ void Entity::checkCollisionX(Entity *collidableEntities, int collisionCheckCount
                 mPosition.x     -= xOverlap;
                 mVelocity.x      = 0;
 
-                // Collision!
                 mIsCollidingRight = true;
             } else if (mVelocity.x < 0) {
                 mPosition.x    += xOverlap;
                 mVelocity.x     = 0;
  
-                // Collision!
                 mIsCollidingLeft = true;
             }
         }
@@ -122,22 +108,20 @@ void Entity::checkCollisionY(Map *map)
     float xOverlap = 0.0f;
     float yOverlap = 0.0f;
 
-    // COLLISION ABOVE (jumping upward)
     if ((map->isSolidTileAt(topCentreProbe, &xOverlap, &yOverlap) ||
          map->isSolidTileAt(topLeftProbe, &xOverlap, &yOverlap)   ||
          map->isSolidTileAt(topRightProbe, &xOverlap, &yOverlap)) && mVelocity.y < 0.0f)
     {
-        mPosition.y += yOverlap;   // push down
+        mPosition.y += yOverlap;
         mVelocity.y  = 0.0f;
         mIsCollidingTop = true;
     }
 
-    // COLLISION BELOW (falling downward)
     if ((map->isSolidTileAt(bottomCentreProbe, &xOverlap, &yOverlap) ||
          map->isSolidTileAt(bottomLeftProbe, &xOverlap, &yOverlap)   ||
          map->isSolidTileAt(bottomRightProbe, &xOverlap, &yOverlap)) && mVelocity.y > 0.0f)
     {
-        mPosition.y -= yOverlap;   // push up
+        mPosition.y -= yOverlap;
         mVelocity.y  = 0.0f;
         mIsCollidingBottom = true;
     } 
@@ -157,7 +141,7 @@ void Entity::checkCollisionX(Map *map)
     if (map->isSolidTileAt(rightCentreProbe, &xOverlap, &yOverlap) 
          && mVelocity.x > 0.0f && yOverlap >= 0.5f)
     {
-        mPosition.x -= xOverlap * 1.01f;   // push left
+        mPosition.x -= xOverlap * 1.01f;
         mVelocity.x  = 0.0f;
         mIsCollidingRight = true;
     }
@@ -166,7 +150,7 @@ void Entity::checkCollisionX(Map *map)
     if (map->isSolidTileAt(leftCentreProbe, &xOverlap, &yOverlap) 
          && mVelocity.x < 0.0f && yOverlap >= 0.5f)
     {
-        mPosition.x += xOverlap * 1.01;   // push right
+        mPosition.x += xOverlap * 1.01;
         mVelocity.x  = 0.0f;
         mIsCollidingLeft = true;
     }
@@ -230,9 +214,7 @@ void Entity::AIFly()
 
 void Entity::AIFollow(Entity *target)
 {
-    // Define how far the player must be past the snail to trigger a turn.
-    // ** You will need to tune this value! **
-    const float TURN_THRESHOLD = 120.0f; // e.g., 20 pixels
+    const float TURN_THRESHOLD = 120.0f;
 
     switch (mAIState)
     {
@@ -286,11 +268,11 @@ void Entity::AIActivate(Entity *target)
             case IDLE:
                 if (Vector2Distance(mPosition, target->getPosition()) < 1200.0f)
                 {
-                    mAIState = WALKING; // "WALKING" now means "ACTIVE" for the bee
+                    mAIState = WALKING;
                 }
                 mVelocity.y = 0.0f;
                 break;
-            case WALKING: // "ACTIVE" state
+            case WALKING:
                 AIFly();
                 if (Vector2Distance(mPosition, target->getPosition()) > 1250.0f)
                 {
@@ -314,18 +296,15 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
 
     resetColliderFlags();
 
-    // horizontal movement
     mVelocity.x = mMovement.x * mSpeed;
     mVelocity.x += mAcceleration.x * deltaTime;
     mVelocity.y += mAcceleration.y * deltaTime;
 
-    // jumping
     if (mIsJumping) {
         mIsJumping = false;
         mVelocity.y -= mJumpingPower;
     }
 
-    // vertical movement & collisions
     mPosition.y += mVelocity.y * deltaTime;
     checkCollisionY(collidableEntities, collisionCheckCount);
     checkCollisionY(map);
@@ -335,17 +314,14 @@ void Entity::update(float deltaTime, Entity *player, Map *map,
     checkCollisionX(map);
 
     // direction decision
-    if (mEntityType == PLAYER) // <--- ADD THIS LINE
+    if (mEntityType == PLAYER)
     {
         if (!mIsCollidingBottom) {
-            // in the air → jumping
             mDirection = (mVelocity.x >= 0) ? JUMP_RIGHT : JUMP_LEFT;
         } else {
             if (fabs(mVelocity.x) > 0.1f) {
-                // moving → walk
                 mDirection = (mVelocity.x > 0) ? RIGHT : LEFT;
             } else {
-                // not moving → idle
                 if (mDirection == LEFT || mDirection == JUMP_LEFT)
                     mDirection = IDLE_LEFT;
                 else
@@ -375,12 +351,9 @@ void Entity::render()
     switch (mTextureType)
     {
         case SINGLE:
-            // Whole texture (UV coordinates)
             textureArea = {
-                // top-left corner
                 0.0f, 0.0f,
 
-                // bottom-right corner (of texture)
                 static_cast<float>(mTexture.width),
                 static_cast<float>(mTexture.height)
             };
@@ -396,7 +369,6 @@ void Entity::render()
         default: break;
     }
 
-    // Destination rectangle – centred on gPosition
     Rectangle destinationArea = {
         mPosition.x,
         mPosition.y,
@@ -404,13 +376,11 @@ void Entity::render()
         static_cast<float>(mScale.y)
     };
 
-    // Origin inside the source texture (centre of the texture)
     Vector2 originOffset = {
         static_cast<float>(mScale.x) / 2.0f,
         static_cast<float>(mScale.y) / 2.0f
     };
 
-    // Render the texture on screen
     DrawTexturePro(
         mTexture, 
         textureArea, destinationArea, originOffset,
@@ -431,10 +401,10 @@ void Entity::displayCollider()
     };
 
     DrawRectangleLines(
-        colliderBox.x,      // Top-left X
-        colliderBox.y,      // Top-left Y
-        colliderBox.width,  // Width
-        colliderBox.height, // Height
-        GREEN               // Color
+        colliderBox.x,
+        colliderBox.y,
+        colliderBox.width,
+        colliderBox.height,
+        GREEN
     );
 }

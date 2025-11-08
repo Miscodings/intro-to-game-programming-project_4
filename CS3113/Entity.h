@@ -172,4 +172,4 @@ public:
         { mAIType = newType;                       }
 };
 
-#endif // ENTITY_CPP
+#endif

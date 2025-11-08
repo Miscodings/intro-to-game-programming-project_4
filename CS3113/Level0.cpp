@@ -66,7 +66,7 @@ void Level0::render()
 void Level0::shutdown()
 {
    delete mGameState.map;
-   mGameState.map = nullptr; // Good practice
+   mGameState.map = nullptr;
    UnloadTexture(mBackgroundTexture);
 
    UnloadMusicStream(mGameState.bgm);
